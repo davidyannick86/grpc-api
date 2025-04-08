@@ -2,6 +2,19 @@ version: '3'
 
 tasks:
 
+  clean:
+    desc: Clean up the project
+    cmds:
+      - rm -rf ./proto/gen
+    silent: true
+
+  proto:
+    desc: Generate Go code from Protobuf files
+    cmds:
+      - protoc -I=proto --go_out=. --go-grpc_out=. proto/*.proto
+      - echo "Protobuf files generated"
+    silent: true
+
   compose:
     desc: Run a Docker Compose command
     cmds:
