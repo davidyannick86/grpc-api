@@ -1,0 +1,24 @@
+version: '3'
+
+tasks:
+
+  compose:
+    desc: Run a Docker Compose command
+    cmds:
+      - docker compose up -d --force-recreate
+      - echo "Docker Compose started"
+    silent: true
+
+  mongosh:
+    desc: Run a MongoDB shell command
+    cmds:
+      - docker exec -it mongodb  mongosh
+    silent: false
+
+  mongoclean:
+    desc: Clean up MongoDB data
+    cmds:
+      - docker compose down
+      - rm -rf ./mongodb_data
+      - echo "MongoDB data cleaned up"
+    silent: true
