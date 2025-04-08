@@ -1,2 +1,7 @@
 mongodb_data/
 cmd/grpcapi/server.go
+cert.conf
+openssl.cnf
+cert/cert.pem
+cert/key.pem
+cmd/grpcapi/.env

@@ -1,5 +1,7 @@
 # SQL / NoSQL
 
+In GRPC middlewares are called interceptors
+
 | Feature                | SQL                                                          | NoSQL                                                                        |
 | :--------------------- | :----------------------------------------------------------- | :--------------------------------------------------------------------------- |
 | **Database**           | Collection of tables                                         | Collection of collections                                                    |
