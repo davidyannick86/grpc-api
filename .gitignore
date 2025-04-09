@@ -3,3 +3,4 @@ cert/
 cmd/grpcapi/.env
 cmd/grpcapi/server.go
 .env
+go.sum

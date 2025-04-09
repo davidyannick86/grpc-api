@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/api/handlers"
+	"github.com/davidyannick86/grpc-api-mongodb/internals/repositories/mongodb"
+	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -14,7 +16,12 @@ import (
 
 func main() {
 
-	err := godotenv.Load()
+	_, err := mongodb.CreateMongoClient()
+	if err != nil {
+		log.Fatalf("Failed to create MongoDB client: %v", err)
+	}
+
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
@@ -34,7 +41,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	log.Println("Server is running on port:", port)
+	utils.PrintHanlder("Server is running on port: " + port)
 
 	if err := server.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
