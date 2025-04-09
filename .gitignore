@@ -1,3 +1,5 @@
 mongodb_data/
 cert/
 cmd/grpcapi/.env
+cmd/grpcapi/server.go
+.env

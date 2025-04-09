@@ -2,6 +2,12 @@ version: '3'
 
 tasks:
 
+  server:
+    desc: Run the Go server
+    cmds:
+      - go run ./cmd/grpcapi/server.go
+    silent: false
+
   clean:
     desc: Clean up the project
     cmds:
