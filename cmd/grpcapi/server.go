@@ -32,8 +32,6 @@ func main() {
 	pb.RegisterStudentsServiceServer(server, &handlers.Server{})
 	pb.RegisterTeachersServiceServer(server, &handlers.Server{})
 
-	reflection.Register(server)
-
 	port := os.Getenv("SERVER_PORT")
 
 	listener, err := net.Listen("tcp", port)
@@ -42,6 +40,8 @@ func main() {
 	}
 
 	utils.PrintHanlder("Server is running on port: " + port)
+
+	reflection.Register(server)
 
 	if err := server.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
