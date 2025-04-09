@@ -1,10 +1,10 @@
 package models
 
 type Teacher struct {
-	Id        string `json:"id,omitempty" bson:"_id"`
-	FirstName string `json:"first_name" bson:"first_name"`
-	LastName  string `json:"last_name" bson:"last_name"`
-	Email     string `json:"email" bson:"email"`
-	Class     string `json:"class" bson:"class"`
-	Subject   string `json:"subject" bson:"subject"`
+	Id        string `protobuf:"id,omitempty" bson:"_id,omitempty"`
+	FirstName string `protobuf:"first_name,omitempty" bson:"first_name,omitempty"`
+	LastName  string `protobuf:"last_name,omitempty" bson:"last_name,omitempty"`
+	Email     string `protobuf:"email,omitempty" bson:"email,omitempty"`
+	Class     string `protobuf:"class,omitempty" bson:"class,omitempty"`
+	Subject   string `protobuf:"subject,omitempty" bson:"subject,omitempty"`
 }
