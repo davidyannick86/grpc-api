@@ -9,6 +9,7 @@ tasks:
         echo "Available tasks:"
         awk '/^  [a-zA-Z_-]+:/ { task = substr($1, 0, length($1)-1); getline; if ($1 == "desc:") { desc = substr($0, 11); printf "  \033[36m%-15s\033[0m %s\n", task, desc } }' taskfile.yml
         echo ""
+    silent: true
 
   server:
     desc: Run the Go server
