@@ -1,7 +1,4 @@
-mongodb_data/
 cert/
-cmd/grpcapi/.env
-cmd/grpcapi/server.go
 .env
 go.sum
-go.sum
+proto/gen/
