@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
 	"github.com/davidyannick86/grpc-api-mongodb/internals/repositories/mongodb"
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teachers, error) {
@@ -24,15 +24,24 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 		newTeachers[i] = mapPbTeacherToModelTeacher(t)
 	}
 
+	var addedTeacher []*pb.Teacher
+
 	for _, teacher := range newTeachers {
-		fmt.Println(teacher.FirstName)
-		fmt.Println(teacher.LastName)
+		result, err := mongoClient.Database("school").Collection("teachers").InsertOne(ctx, teacher)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to add teacher to MongoDB")
+		}
+
+		objectId, ok := result.InsertedID.(primitive.ObjectID)
+		if ok {
+			teacher.Id = objectId.Hex()
+		}
+
 	}
 
-	return nil, nil
+	return &pb.Teachers{Teachers: addedTeacher}, nil
 
 }
-
 func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
 	modelTeacher := models.Teacher{}
 	pbVal := reflect.ValueOf(pbTeacher).Elem()
