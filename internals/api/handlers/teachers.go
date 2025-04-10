@@ -20,24 +20,32 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 
 	newTeachers := make([]*models.Teacher, len(req.GetTeachers()))
 
-	for _, pbTeacher := range req.GetTeachers() {
-		modelTeacher := models.Teacher{}
-		pbVal := reflect.ValueOf(pbTeacher).Elem()
-		modelVal := reflect.ValueOf(&modelTeacher).Elem()
+	for i, t := range req.GetTeachers() {
+		newTeachers[i] = mapPbTeacherToModelTeacher(t)
+	}
 
-		for i := 0; i < pbVal.NumField(); i++ {
-			pbField := pbVal.Field(i)
-			fieldName := pbVal.Type().Field(i).Name
+	for _, teacher := range newTeachers {
+		fmt.Println(teacher.FirstName)
+		fmt.Println(teacher.LastName)
+	}
 
-			modelField := modelVal.FieldByName(fieldName)
-			if modelField.IsValid() && modelField.CanSet() {
-				modelField.Set(pbField)
-			} else {
-				fmt.Printf("Field %s not found in model\n", fieldName)
-			}
-			newTeachers[i] = &modelTeacher
+	return nil, nil
+
+}
+
+func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
+	modelTeacher := models.Teacher{}
+	pbVal := reflect.ValueOf(pbTeacher).Elem()
+	modelVal := reflect.ValueOf(&modelTeacher).Elem()
+
+	for i := range pbVal.NumField() {
+		pbField := pbVal.Field(i)
+		fieldName := pbVal.Type().Field(i).Name
+
+		modelField := modelVal.FieldByName(fieldName)
+		if modelField.IsValid() && modelField.CanSet() {
+			modelField.Set(pbField)
 		}
 	}
-	fmt.Println(newTeachers)
-	return nil, nil
+	return &modelTeacher
 }
