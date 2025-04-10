@@ -2,6 +2,14 @@ version: '3'
 
 tasks:
 
+  help:
+    desc: Show help for available tasks
+    cmds: 
+      - |
+        echo "Available tasks:"
+        awk '/^  [a-zA-Z_-]+:/ { task = substr($1, 0, length($1)-1); getline; if ($1 == "desc:") { desc = substr($0, 11); printf "  \033[36m%-15s\033[0m %s\n", task, desc } }' taskfile.yml
+        echo ""
+
   server:
     desc: Run the Go server
     cmds:
@@ -34,3 +42,11 @@ tasks:
     cmds:
       - docker exec -it mongodb  mongosh
     silent: false
+
+  update:
+    desc: Update the project dependencies
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+      - echo "Dependencies updated"
+    silent: true
