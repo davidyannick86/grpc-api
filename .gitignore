@@ -3,3 +3,5 @@ cert/
 go.sum
 proto/gen/
 docs/
+cmd/binaries/
+cmd/grpcapi/binaries/
