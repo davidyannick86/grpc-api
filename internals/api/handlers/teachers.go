@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
@@ -20,41 +21,77 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 
 	newTeachers := make([]*models.Teacher, len(req.GetTeachers()))
 
-	for i, t := range req.GetTeachers() {
-		newTeachers[i] = mapPbTeacherToModelTeacher(t)
+	for i, pbTeachereacher := range req.GetTeachers() {
+		modelTeacher := models.Teacher{FirstName: "Tagada"}
+		pbVal := reflect.ValueOf(pbTeachereacher).Elem()
+		modelVal := reflect.ValueOf(&modelTeacher).Elem()
+
+		for i := range pbVal.NumField() {
+			pbField := pbVal.Field(i)
+			fieldName := pbVal.Type().Field(i).Name
+
+			modelField := modelVal.FieldByName(fieldName)
+			if modelField.IsValid() && modelField.CanSet() {
+				modelField.Set(pbField)
+			}
+		}
+		newTeachers[i] = &modelTeacher
 	}
 
-	var addedTeacher []*pb.Teacher
+	fmt.Println("newTeachers", newTeachers)
+
+	// // return &pb.Teachers{Teachers: addedTeacher}, nil
+	var addedTeachers []*pb.Teacher
 
 	for _, teacher := range newTeachers {
 		result, err := mongoClient.Database("school").Collection("teachers").InsertOne(ctx, teacher)
 		if err != nil {
-			return nil, utils.ErrorHandler(err, "Failed to add teacher to MongoDB")
+			return nil, utils.ErrorHandler(err, "Failed to insert teacher into MongoDB")
 		}
+
+		utils.PrintHanlder("ok")
 
 		objectId, ok := result.InsertedID.(primitive.ObjectID)
 		if ok {
 			teacher.Id = objectId.Hex()
 		}
 
-	}
+		utils.PrintHanlder("ok")
 
-	return &pb.Teachers{Teachers: addedTeacher}, nil
+		pbTeacher := &pb.Teacher{}
+		modelVal := reflect.ValueOf(*teacher)
+		pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
 
-}
-func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
-	modelTeacher := models.Teacher{}
-	pbVal := reflect.ValueOf(pbTeacher).Elem()
-	modelVal := reflect.ValueOf(&modelTeacher).Elem()
+		for i := 0; i < modelVal.NumField(); i++ { // Correction de la boucle
+			modelField := modelVal.Field(i)
 
-	for i := range pbVal.NumField() {
-		pbField := pbVal.Field(i)
-		fieldName := pbVal.Type().Field(i).Name
+			modelFieldType := modelVal.Type().Field(i)
 
-		modelField := modelVal.FieldByName(fieldName)
-		if modelField.IsValid() && modelField.CanSet() {
-			modelField.Set(pbField)
+			pbField := pbVal.FieldByName(modelFieldType.Name)
+
+			if pbField.IsValid() && pbField.CanSet() {
+				pbField.Set(modelField)
+			}
 		}
+		addedTeachers = append(addedTeachers, pbTeacher)
 	}
-	return &modelTeacher
+
+	return &pb.Teachers{Teachers: addedTeachers}, nil
 }
+
+// func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
+// 	modelTeacher := models.Teacher{}
+// 	pbVal := reflect.ValueOf(pbTeacher).Elem()
+// 	modelVal := reflect.ValueOf(&modelTeacher).Elem()
+
+// 	for i := range pbVal.NumField() {
+// 		pbField := pbVal.Field(i)
+// 		fieldName := pbVal.Type().Field(i).Name
+
+// 		modelField := modelVal.FieldByName(fieldName)
+// 		if modelField.IsValid() && modelField.CanSet() {
+// 			modelField.Set(pbField)
+// 		}
+// 	}
+// 	return &modelTeacher
+// }
