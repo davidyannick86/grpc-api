@@ -49,20 +49,16 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 			return nil, utils.ErrorHandler(err, "Failed to insert teacher into MongoDB")
 		}
 
-		utils.PrintHanlder("ok")
-
 		objectId, ok := result.InsertedID.(primitive.ObjectID)
 		if ok {
 			teacher.Id = objectId.Hex()
 		}
 
-		utils.PrintHanlder("ok")
-
 		pbTeacher := &pb.Teacher{}
 		modelVal := reflect.ValueOf(*teacher)
 		pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
 
-		for i := 0; i < modelVal.NumField(); i++ { // Correction de la boucle
+		for i := range modelVal.NumField() { // Correction de la boucle
 			modelField := modelVal.Field(i)
 
 			modelFieldType := modelVal.Type().Field(i)
@@ -78,20 +74,3 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 
 	return &pb.Teachers{Teachers: addedTeachers}, nil
 }
-
-// func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
-// 	modelTeacher := models.Teacher{}
-// 	pbVal := reflect.ValueOf(pbTeacher).Elem()
-// 	modelVal := reflect.ValueOf(&modelTeacher).Elem()
-
-// 	for i := range pbVal.NumField() {
-// 		pbField := pbVal.Field(i)
-// 		fieldName := pbVal.Type().Field(i).Name
-
-// 		modelField := modelVal.FieldByName(fieldName)
-// 		if modelField.IsValid() && modelField.CanSet() {
-// 			modelField.Set(pbField)
-// 		}
-// 	}
-// 	return &modelTeacher
-// }
