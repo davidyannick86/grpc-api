@@ -5,3 +5,4 @@ proto/gen/
 docs/
 cmd/binaries/
 cmd/grpcapi/binaries/
+.DS_Store
