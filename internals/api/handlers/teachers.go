@@ -12,8 +12,6 @@ import (
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -36,69 +34,36 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 
 func (s *Server) GetTeachers(ctx context.Context, req *pb.GetTeachersRequest) (*pb.Teachers, error) {
 	// filtering
-	filter, errs := buildFilterForTeacher(req)
+	filter, errs := buildFilterForTeacher(req.Teacher)
 	if errs != nil {
-		return nil, utils.ErrorHandler(errs, "Invalid filter")
+		return nil, status.Error(codes.InvalidArgument, errs.Error())
 	}
 
 	// sorting
 	sortOptions := buildSortOptions(req.GetSortBy())
 
 	// access data
-	client, err := mongodb.CreateMongoClient()
-	defer client.Disconnect(ctx)
+	teachers, err := mongodb.GetTeachersFromDB(ctx, sortOptions, filter)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	coll := client.Database("school").Collection("teachers")
-
-	var cursor *mongo.Cursor
-
-	if len(sortOptions) < 1 {
-		cursor, err = coll.Find(ctx, filter)
-	} else {
-		cursor, err = coll.Find(ctx, filter, options.Find().SetSort(sortOptions))
-	}
-
-	defer cursor.Close(ctx)
-
-	if err != nil {
-		return nil, utils.ErrorHandler(err, "Internal error")
-	}
-
-	//cursor, err = coll.Find(ctx, filter, options.Find().SetSort(sortOptions))
-
-	var teachers []*pb.Teacher
-
-	for cursor.Next(ctx) {
-		var teacher models.Teacher
-		err := cursor.Decode(&teacher)
-		if err != nil {
-			return nil, utils.ErrorHandler(err, "Internal error")
-		}
-		teachers = append(teachers, &pb.Teacher{
-			Id:        teacher.Id,
-			FirstName: teacher.FirstName,
-			LastName:  teacher.LastName,
-			Email:     teacher.Email,
-			Class:     teacher.Class,
-			Subject:   teacher.Subject,
-		})
 	}
 
 	return &pb.Teachers{Teachers: teachers}, nil
 }
 
-func buildFilterForTeacher(req *pb.GetTeachersRequest) (bson.M, error) {
+func buildFilterForTeacher(teacherObj *pb.Teacher) (bson.M, error) {
 	filter := bson.M{} // It's a map,  M is an unordered representation of a BSON document
+
+	if teacherObj == nil {
+		return filter, nil
+	}
 
 	var modelTeacher models.Teacher
 
 	modelVal := reflect.ValueOf(&modelTeacher).Elem()
 	modelType := modelVal.Type()
 
-	reqVal := reflect.ValueOf(req.Teacher).Elem()
+	reqVal := reflect.ValueOf(teacherObj).Elem()
 	reqType := reqVal.Type()
 
 	for i := range reqVal.NumField() {
@@ -122,7 +87,7 @@ func buildFilterForTeacher(req *pb.GetTeachersRequest) (bson.M, error) {
 			bsonTag := modelType.Field(i).Tag.Get("bson")
 			bsonTag = strings.TrimSuffix(bsonTag, ",omitempty")
 			if bsonTag == "_id" {
-				objectId, err := primitive.ObjectIDFromHex(req.Teacher.Id)
+				objectId, err := primitive.ObjectIDFromHex(teacherObj.Id)
 				if err != nil {
 					return nil, utils.ErrorHandler(err, "Invalid ObjectId")
 				}
