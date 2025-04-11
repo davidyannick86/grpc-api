@@ -7,7 +7,6 @@ import (
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/api/handlers"
 	"github.com/davidyannick86/grpc-api-mongodb/internals/repositories/mongodb"
-	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -39,7 +38,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	utils.PrintHanlder("Server is running on port: " + port)
+	log.Println("Server is running on port", port)
 
 	reflection.Register(server)
 

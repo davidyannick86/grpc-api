@@ -24,7 +24,5 @@ func CreateMongoClient() (*mongo.Client, error) {
 		return nil, utils.ErrorHandler(err, "Failed to ping MongoDB")
 	}
 
-	utils.PrintHanlder("Connected to MongoDB successfully")
-
 	return client, nil
 }
