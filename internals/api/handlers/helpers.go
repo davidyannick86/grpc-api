@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"reflect"
 	"strings"
 
@@ -55,8 +54,6 @@ func buildFilter(object any, model any) (bson.M, error) {
 			}
 		}
 	}
-
-	log.Println("filter", filter)
 
 	return filter, nil
 }
