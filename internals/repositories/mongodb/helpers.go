@@ -19,8 +19,8 @@ func decodeEntities[T any, M any](ctx context.Context, cursor *mongo.Cursor, new
 		}
 
 		entity := newEntity()
-		modelVal := reflect.ValueOf(model).Elem()
-		pbVal := reflect.ValueOf(entity).Elem() // Utiliser Elem() pour obtenir la valeur pointées
+		modelVal := reflect.ValueOf(model).Elem() // Utiliser Elem() pour obtenir la valeur pointées
+		pbVal := reflect.ValueOf(entity).Elem()   // Utiliser Elem() pour obtenir la valeur pointées
 
 		for i := range modelVal.NumField() {
 			modelField := modelVal.Field(i)
