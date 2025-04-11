@@ -38,24 +38,15 @@ func GetTeachersFromDB(ctx context.Context, sortOptions bson.D, filter bson.M) (
 		return nil, utils.ErrorHandler(err, "Internal error")
 	}
 
-	var teachers []*pb.Teacher
-
-	for cursor.Next(ctx) {
-		var teacher models.Teacher
-		err := cursor.Decode(&teacher)
-		if err != nil {
-			return nil, utils.ErrorHandler(err, "Internal error")
-		}
-		teachers = append(teachers, &pb.Teacher{
-			Id:        teacher.Id,
-			FirstName: teacher.FirstName,
-			LastName:  teacher.LastName,
-			Email:     teacher.Email,
-			Class:     teacher.Class,
-			Subject:   teacher.Subject,
-		})
+	teachers, err := decodeEntities(ctx, cursor, func() *pb.Teacher { return &pb.Teacher{} }, newModel)
+	if err != nil {
+		return nil, err
 	}
 	return teachers, nil
+}
+
+func newModel() *models.Teacher {
+	return &models.Teacher{}
 }
 
 func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*pb.Teacher, error) {
