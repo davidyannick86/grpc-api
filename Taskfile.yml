@@ -11,6 +11,20 @@ tasks:
         echo ""
     silent: true
 
+  ##############################################
+  # Module support
+  ##############################################
+  update:
+    desc: Update the project dependencies
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+      - echo "Dependencies updated"
+    silent: true
+
+  ##############################################
+  # App support
+  ##############################################
   server:
     desc: Run the Go server
     cmds:
@@ -44,13 +58,6 @@ tasks:
       - docker exec -it mongodb  mongosh
     silent: false
 
-  update:
-    desc: Update the project dependencies
-    cmds:
-      - go get -u ./...
-      - go mod tidy
-      - echo "Dependencies updated"
-    silent: true
 
 
   
