@@ -11,6 +11,7 @@ import (
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
@@ -35,7 +36,10 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 
 func (s *Server) GetTeachers(ctx context.Context, req *pb.GetTeachersRequest) (*pb.Teachers, error) {
 	// filtering
-	filter := buildFilterForTeacher(req)
+	filter, errs := buildFilterForTeacher(req)
+	if errs != nil {
+		return nil, utils.ErrorHandler(errs, "Invalid filter")
+	}
 
 	// sorting
 	sortOptions := buildSortOptions(req.GetSortBy())
@@ -51,11 +55,19 @@ func (s *Server) GetTeachers(ctx context.Context, req *pb.GetTeachersRequest) (*
 
 	var cursor *mongo.Cursor
 
-	cursor, err = coll.Find(ctx, filter, options.Find().SetSort(sortOptions))
+	if len(sortOptions) < 1 {
+		cursor, err = coll.Find(ctx, filter)
+	} else {
+		cursor, err = coll.Find(ctx, filter, options.Find().SetSort(sortOptions))
+	}
+
+	defer cursor.Close(ctx)
+
 	if err != nil {
 		return nil, utils.ErrorHandler(err, "Internal error")
 	}
-	defer cursor.Close(ctx)
+
+	//cursor, err = coll.Find(ctx, filter, options.Find().SetSort(sortOptions))
 
 	var teachers []*pb.Teacher
 
@@ -78,7 +90,7 @@ func (s *Server) GetTeachers(ctx context.Context, req *pb.GetTeachersRequest) (*
 	return &pb.Teachers{Teachers: teachers}, nil
 }
 
-func buildFilterForTeacher(req *pb.GetTeachersRequest) bson.M {
+func buildFilterForTeacher(req *pb.GetTeachersRequest) (bson.M, error) {
 	filter := bson.M{} // It's a map,  M is an unordered representation of a BSON document
 
 	var modelTeacher models.Teacher
@@ -109,14 +121,21 @@ func buildFilterForTeacher(req *pb.GetTeachersRequest) bson.M {
 		if fieldVal.IsValid() && !fieldVal.IsZero() {
 			bsonTag := modelType.Field(i).Tag.Get("bson")
 			bsonTag = strings.TrimSuffix(bsonTag, ",omitempty")
-
-			filter[bsonTag] = fieldVal.Interface().(string)
+			if bsonTag == "_id" {
+				objectId, err := primitive.ObjectIDFromHex(req.Teacher.Id)
+				if err != nil {
+					return nil, utils.ErrorHandler(err, "Invalid ObjectId")
+				}
+				filter[bsonTag] = objectId
+			} else {
+				filter[bsonTag] = fieldVal.Interface().(string)
+			}
 		}
 	}
 
 	log.Println("filter", filter)
 
-	return filter
+	return filter, nil
 }
 
 func buildSortOptions(sortFields []*pb.SortField) bson.D {
