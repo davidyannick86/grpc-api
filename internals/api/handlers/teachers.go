@@ -10,37 +10,41 @@ import (
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teachers, error) {
+
+	for _, teacher := range req.GetTeachers() {
+		if teacher.Id != "" {
+			return nil, status.Error(codes.InvalidArgument, "Id must be empty")
+		}
+	}
+
+	addedTeachers, err := AddTeacherToDb(ctx, req.GetTeachers())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.Teachers{Teachers: addedTeachers}, nil
+}
+
+func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*pb.Teacher, error) {
 	mongoClient, err := mongodb.CreateMongoClient()
 	if err != nil {
 		return nil, utils.ErrorHandler(err, "Failed to create MongoDB client")
 	}
 	defer mongoClient.Disconnect(ctx)
 
-	newTeachers := make([]*models.Teacher, len(req.GetTeachers()))
+	newTeachers := make([]*models.Teacher, len(teachersFomRequest))
 
-	for i, pbTeachereacher := range req.GetTeachers() {
-		modelTeacher := models.Teacher{FirstName: "Tagada"}
-		pbVal := reflect.ValueOf(pbTeachereacher).Elem()
-		modelVal := reflect.ValueOf(&modelTeacher).Elem()
-
-		for i := range pbVal.NumField() {
-			pbField := pbVal.Field(i)
-			fieldName := pbVal.Type().Field(i).Name
-
-			modelField := modelVal.FieldByName(fieldName)
-			if modelField.IsValid() && modelField.CanSet() {
-				modelField.Set(pbField)
-			}
-		}
-		newTeachers[i] = &modelTeacher
+	for i, pbTeachereacher := range teachersFomRequest {
+		newTeachers[i] = mapPbTeacherToModelTeacher(pbTeachereacher)
 	}
 
 	fmt.Println("newTeachers", newTeachers)
 
-	// // return &pb.Teachers{Teachers: addedTeacher}, nil
 	var addedTeachers []*pb.Teacher
 
 	for _, teacher := range newTeachers {
@@ -54,23 +58,44 @@ func (s *Server) AddTeachers(ctx context.Context, req *pb.Teachers) (*pb.Teacher
 			teacher.Id = objectId.Hex()
 		}
 
-		pbTeacher := &pb.Teacher{}
-		modelVal := reflect.ValueOf(*teacher)
-		pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
-
-		for i := range modelVal.NumField() { // Correction de la boucle
-			modelField := modelVal.Field(i)
-
-			modelFieldType := modelVal.Type().Field(i)
-
-			pbField := pbVal.FieldByName(modelFieldType.Name)
-
-			if pbField.IsValid() && pbField.CanSet() {
-				pbField.Set(modelField)
-			}
-		}
+		pbTeacher := mapModelTeacherToPb(teacher)
 		addedTeachers = append(addedTeachers, pbTeacher)
 	}
+	return addedTeachers, nil
+}
 
-	return &pb.Teachers{Teachers: addedTeachers}, nil
+func mapModelTeacherToPb(teacher *models.Teacher) *pb.Teacher {
+	pbTeacher := &pb.Teacher{}
+	modelVal := reflect.ValueOf(*teacher)
+	pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
+
+	for i := range modelVal.NumField() { // Correction de la boucle
+		modelField := modelVal.Field(i)
+
+		modelFieldType := modelVal.Type().Field(i)
+
+		pbField := pbVal.FieldByName(modelFieldType.Name)
+
+		if pbField.IsValid() && pbField.CanSet() {
+			pbField.Set(modelField)
+		}
+	}
+	return pbTeacher
+}
+
+func mapPbTeacherToModelTeacher(pbTeachereacher *pb.Teacher) *models.Teacher {
+	modelTeacher := models.Teacher{}
+	pbVal := reflect.ValueOf(pbTeachereacher).Elem()
+	modelVal := reflect.ValueOf(&modelTeacher).Elem()
+
+	for i := range pbVal.NumField() {
+		pbField := pbVal.Field(i)
+		fieldName := pbVal.Type().Field(i).Name
+
+		modelField := modelVal.FieldByName(fieldName)
+		if modelField.IsValid() && modelField.CanSet() {
+			modelField.Set(pbField)
+		}
+	}
+	return &modelTeacher
 }
