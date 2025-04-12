@@ -4,10 +4,12 @@ import (
 	"context"
 	"reflect"
 
+	"go.mongodb.org/mongo-driver/mongo"
+
 	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
+
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func decodeEntities[T any, M any](ctx context.Context, cursor *mongo.Cursor, newEntity func() *T, newModel func() *M) ([]*T, error) {
