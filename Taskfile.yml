@@ -22,6 +22,7 @@ tasks:
       - proto
     cmds:
       - go run ./cmd/grpcapi/server.go
+      - echo "Server started successfully"  
     silent: false
 
   clean:
