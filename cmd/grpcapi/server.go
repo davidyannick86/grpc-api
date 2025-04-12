@@ -17,7 +17,7 @@ func main() {
 
 	_, err := mongodb.CreateMongoClient()
 	if err != nil {
-		log.Fatalf("Failed to create MongoDB client: %v", err)
+		log.Fatalf("Failed to create MongoDB client:: %v", err)
 	}
 
 	err = godotenv.Load()
