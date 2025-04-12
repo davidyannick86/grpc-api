@@ -65,11 +65,23 @@ func mapModelToPb[M any, P any](model M, newPb func() *P) *P {
 	return pbStruct
 }
 
-func MapModelTeacherToPb(teacherModel models.Teacher) *pb.Teacher {
+func mapModelTeacherToPb(teacherModel models.Teacher) *pb.Teacher {
 	return mapModelToPb(teacherModel, func() *pb.Teacher {
 		return &pb.Teacher{}
 	})
 }
+
+// func mapModelStudentToPb(studentModel models.Student) *pb.Student {
+// 	return mapModelToPb(studentModel, func() *pb.Student {
+// 		return &pb.Student{}
+// 	})
+// }
+
+// func mapModelExecToPb(execModel models.Exec) *pb.Exec {
+// 	return mapModelToPb(execModel, func() *pb.Exec {
+// 		return &pb.Exec{}
+// 	})
+// }
 
 func mapPbToModel[M any, P any](pbStruct P, newModel func() *M) *M {
 
@@ -95,38 +107,14 @@ func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
 	})
 }
 
-// func MapModelTeacherToPb(teacher *models.Teacher) *pb.Teacher {
-// 	pbTeacher := &pb.Teacher{}
-// 	modelVal := reflect.ValueOf(*teacher)
-// 	pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
-
-// 	for i := range modelVal.NumField() { // Correction de la boucle
-// 		modelField := modelVal.Field(i)
-
-// 		modelFieldType := modelVal.Type().Field(i)
-
-// 		pbField := pbVal.FieldByName(modelFieldType.Name)
-
-// 		if pbField.IsValid() && pbField.CanSet() {
-// 			pbField.Set(modelField)
-// 		}
-// 	}
-// 	return pbTeacher
+// func mapPbStudentToModelStudent(pbStudent *pb.Student) *models.Student {
+// 	return mapPbToModel(pbStudent, func() *models.Student {
+// 		return &models.Student{}
+// 	})
 // }
 
-// func MapPbTeacherToModelTeacher(pbTeachereacher *pb.Teacher) *models.Teacher {
-// 	modelTeacher := models.Teacher{}
-// 	pbVal := reflect.ValueOf(pbTeachereacher).Elem()
-// 	modelVal := reflect.ValueOf(&modelTeacher).Elem()
-
-// 	for i := range pbVal.NumField() {
-// 		pbField := pbVal.Field(i)
-// 		fieldName := pbVal.Type().Field(i).Name
-
-// 		modelField := modelVal.FieldByName(fieldName)
-// 		if modelField.IsValid() && modelField.CanSet() {
-// 			modelField.Set(pbField)
-// 		}
-// 	}
-// 	return &modelTeacher
+// func mapPbExecToModelExec(pbExec *pb.Exec) *models.Exec {
+// 	return mapPbToModel(pbExec, func() *models.Exec {
+// 		return &models.Exec{}
+// 	})
 // }

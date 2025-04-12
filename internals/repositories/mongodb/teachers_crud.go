@@ -74,7 +74,7 @@ func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*p
 			teacher.Id = objectId.Hex()
 		}
 
-		pbTeacher := MapModelTeacherToPb(*teacher)
+		pbTeacher := mapModelTeacherToPb(*teacher)
 		addedTeachers = append(addedTeachers, pbTeacher)
 	}
 	return addedTeachers, nil
@@ -123,7 +123,7 @@ func ModifyTeacherInDB(ctx context.Context, pbTeachers []*pb.Teacher) ([]*pb.Tea
 			return nil, utils.ErrorHandler(err, "Failed to update teacher in the database")
 		}
 
-		updatedTeacher := MapModelTeacherToPb(*modelTeacher)
+		updatedTeacher := mapModelTeacherToPb(*modelTeacher)
 		updatedTeachers = append(updatedTeachers, updatedTeacher)
 	}
 	return updatedTeachers, nil
