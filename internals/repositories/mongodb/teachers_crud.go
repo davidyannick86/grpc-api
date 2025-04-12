@@ -59,7 +59,7 @@ func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*p
 	newTeachers := make([]*models.Teacher, len(teachersFomRequest))
 
 	for i, pbTeachereacher := range teachersFomRequest {
-		newTeachers[i] = mapPbTeacherToModelTeacher(pbTeachereacher)
+		newTeachers[i] = MapPbTeacherToModelTeacher(pbTeachereacher)
 	}
 
 	var addedTeachers []*pb.Teacher
@@ -75,13 +75,13 @@ func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*p
 			teacher.Id = objectId.Hex()
 		}
 
-		pbTeacher := mapModelTeacherToPb(teacher)
+		pbTeacher := MapModelTeacherToPb(teacher)
 		addedTeachers = append(addedTeachers, pbTeacher)
 	}
 	return addedTeachers, nil
 }
 
-func mapModelTeacherToPb(teacher *models.Teacher) *pb.Teacher {
+func MapModelTeacherToPb(teacher *models.Teacher) *pb.Teacher {
 	pbTeacher := &pb.Teacher{}
 	modelVal := reflect.ValueOf(*teacher)
 	pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
@@ -100,7 +100,7 @@ func mapModelTeacherToPb(teacher *models.Teacher) *pb.Teacher {
 	return pbTeacher
 }
 
-func mapPbTeacherToModelTeacher(pbTeachereacher *pb.Teacher) *models.Teacher {
+func MapPbTeacherToModelTeacher(pbTeachereacher *pb.Teacher) *models.Teacher {
 	modelTeacher := models.Teacher{}
 	pbVal := reflect.ValueOf(pbTeachereacher).Elem()
 	modelVal := reflect.ValueOf(&modelTeacher).Elem()
@@ -115,4 +115,48 @@ func mapPbTeacherToModelTeacher(pbTeachereacher *pb.Teacher) *models.Teacher {
 		}
 	}
 	return &modelTeacher
+}
+
+func ModifyTeacherInDB(ctx context.Context, pbTeachers []*pb.Teacher) ([]*pb.Teacher, error) {
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Failed to create MongoDB client")
+	}
+	defer client.Disconnect(ctx)
+
+	var updatedTeachers []*pb.Teacher
+
+	for _, teacher := range pbTeachers {
+		modelTeacher := MapPbTeacherToModelTeacher(teacher)
+		objectID, err := primitive.ObjectIDFromHex(teacher.Id)
+
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert ID to ObjectID")
+		}
+
+		// convert modelTeacher to bson document
+		modelDoc, err := bson.Marshal(modelTeacher)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert model to BSON")
+		}
+
+		// convert bson document to map
+		var updatedDoc bson.M
+		err = bson.Unmarshal(modelDoc, &updatedDoc)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert BSON to map")
+		}
+
+		// remove the ID field from the updatedDoc
+		delete(updatedDoc, "_id")
+
+		_, err = client.Database("school").Collection("teachers").UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updatedDoc})
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to update teacher in the database")
+		}
+
+		updatedTeacher := MapModelTeacherToPb(modelTeacher)
+		updatedTeachers = append(updatedTeachers, updatedTeacher)
+	}
+	return updatedTeachers, nil
 }
