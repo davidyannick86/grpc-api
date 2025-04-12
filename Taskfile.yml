@@ -18,8 +18,9 @@ tasks:
   ##############################################
   server:
     desc: Run the Go server
+    deps:
+      - proto
     cmds:
-      - task: proto
       - go run ./cmd/grpcapi/server.go
     silent: false
 
@@ -64,3 +65,4 @@ tasks:
         echo "Nom: $NOM"
         echo "Prénom: $PRENOM"
     silent: false
+
