@@ -127,6 +127,11 @@ func ModifyTeacherInDB(ctx context.Context, pbTeachers []*pb.Teacher) ([]*pb.Tea
 	var updatedTeachers []*pb.Teacher
 
 	for _, teacher := range pbTeachers {
+
+		if teacher.Id == "" {
+			return nil, utils.ErrorHandler(err, "Id must be set")
+		}
+
 		modelTeacher := MapPbTeacherToModelTeacher(teacher)
 		objectID, err := primitive.ObjectIDFromHex(teacher.Id)
 
