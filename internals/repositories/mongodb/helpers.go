@@ -4,7 +4,9 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
+	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -42,3 +44,89 @@ func decodeEntities[T any, M any](ctx context.Context, cursor *mongo.Cursor, new
 
 	return entities, nil
 }
+
+func mapModelToPb[M any, P any](model M, newPb func() *P) *P {
+
+	pbStruct := newPb()
+	modelVal := reflect.ValueOf(model)
+	pbVal := reflect.ValueOf(pbStruct).Elem() // Utiliser Elem() pour obtenir la valeur pointée
+
+	for i := 0; i < modelVal.NumField(); i++ { // Correction de la boucle
+		modelField := modelVal.Field(i)
+
+		modelFieldType := modelVal.Type().Field(i)
+
+		pbField := pbVal.FieldByName(modelFieldType.Name)
+
+		if pbField.IsValid() && pbField.CanSet() {
+			pbField.Set(modelField)
+		}
+	}
+	return pbStruct
+}
+
+func MapModelTeacherToPb(teacherModel models.Teacher) *pb.Teacher {
+	return mapModelToPb(teacherModel, func() *pb.Teacher {
+		return &pb.Teacher{}
+	})
+}
+
+func mapPbToModel[M any, P any](pbStruct P, newModel func() *M) *M {
+
+	modelStuct := newModel()
+	pbVal := reflect.ValueOf(pbStruct).Elem()
+	modelVal := reflect.ValueOf(modelStuct).Elem()
+
+	for i := 0; i < pbVal.NumField(); i++ {
+		pbField := pbVal.Field(i)
+		fieldName := pbVal.Type().Field(i).Name
+
+		modelField := modelVal.FieldByName(fieldName)
+		if modelField.IsValid() && modelField.CanSet() {
+			modelField.Set(pbField)
+		}
+	}
+	return modelStuct
+}
+
+func mapPbTeacherToModelTeacher(pbTeacher *pb.Teacher) *models.Teacher {
+	return mapPbToModel(pbTeacher, func() *models.Teacher {
+		return &models.Teacher{}
+	})
+}
+
+// func MapModelTeacherToPb(teacher *models.Teacher) *pb.Teacher {
+// 	pbTeacher := &pb.Teacher{}
+// 	modelVal := reflect.ValueOf(*teacher)
+// 	pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
+
+// 	for i := range modelVal.NumField() { // Correction de la boucle
+// 		modelField := modelVal.Field(i)
+
+// 		modelFieldType := modelVal.Type().Field(i)
+
+// 		pbField := pbVal.FieldByName(modelFieldType.Name)
+
+// 		if pbField.IsValid() && pbField.CanSet() {
+// 			pbField.Set(modelField)
+// 		}
+// 	}
+// 	return pbTeacher
+// }
+
+// func MapPbTeacherToModelTeacher(pbTeachereacher *pb.Teacher) *models.Teacher {
+// 	modelTeacher := models.Teacher{}
+// 	pbVal := reflect.ValueOf(pbTeachereacher).Elem()
+// 	modelVal := reflect.ValueOf(&modelTeacher).Elem()
+
+// 	for i := range pbVal.NumField() {
+// 		pbField := pbVal.Field(i)
+// 		fieldName := pbVal.Type().Field(i).Name
+
+// 		modelField := modelVal.FieldByName(fieldName)
+// 		if modelField.IsValid() && modelField.CanSet() {
+// 			modelField.Set(pbField)
+// 		}
+// 	}
+// 	return &modelTeacher
+// }

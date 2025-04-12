@@ -2,7 +2,6 @@ package mongodb
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
@@ -59,7 +58,7 @@ func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*p
 	newTeachers := make([]*models.Teacher, len(teachersFomRequest))
 
 	for i, pbTeachereacher := range teachersFomRequest {
-		newTeachers[i] = MapPbTeacherToModelTeacher(pbTeachereacher)
+		newTeachers[i] = mapPbTeacherToModelTeacher(pbTeachereacher)
 	}
 
 	var addedTeachers []*pb.Teacher
@@ -75,46 +74,10 @@ func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*p
 			teacher.Id = objectId.Hex()
 		}
 
-		pbTeacher := MapModelTeacherToPb(teacher)
+		pbTeacher := MapModelTeacherToPb(*teacher)
 		addedTeachers = append(addedTeachers, pbTeacher)
 	}
 	return addedTeachers, nil
-}
-
-func MapModelTeacherToPb(teacher *models.Teacher) *pb.Teacher {
-	pbTeacher := &pb.Teacher{}
-	modelVal := reflect.ValueOf(*teacher)
-	pbVal := reflect.ValueOf(pbTeacher).Elem() // Utiliser Elem() pour obtenir la valeur pointée
-
-	for i := range modelVal.NumField() { // Correction de la boucle
-		modelField := modelVal.Field(i)
-
-		modelFieldType := modelVal.Type().Field(i)
-
-		pbField := pbVal.FieldByName(modelFieldType.Name)
-
-		if pbField.IsValid() && pbField.CanSet() {
-			pbField.Set(modelField)
-		}
-	}
-	return pbTeacher
-}
-
-func MapPbTeacherToModelTeacher(pbTeachereacher *pb.Teacher) *models.Teacher {
-	modelTeacher := models.Teacher{}
-	pbVal := reflect.ValueOf(pbTeachereacher).Elem()
-	modelVal := reflect.ValueOf(&modelTeacher).Elem()
-
-	for i := range pbVal.NumField() {
-		pbField := pbVal.Field(i)
-		fieldName := pbVal.Type().Field(i).Name
-
-		modelField := modelVal.FieldByName(fieldName)
-		if modelField.IsValid() && modelField.CanSet() {
-			modelField.Set(pbField)
-		}
-	}
-	return &modelTeacher
 }
 
 func ModifyTeacherInDB(ctx context.Context, pbTeachers []*pb.Teacher) ([]*pb.Teacher, error) {
@@ -132,7 +95,7 @@ func ModifyTeacherInDB(ctx context.Context, pbTeachers []*pb.Teacher) ([]*pb.Tea
 			return nil, utils.ErrorHandler(err, "Id must be set")
 		}
 
-		modelTeacher := MapPbTeacherToModelTeacher(teacher)
+		modelTeacher := mapPbTeacherToModelTeacher(teacher)
 		objectID, err := primitive.ObjectIDFromHex(teacher.Id)
 
 		if err != nil {
@@ -160,7 +123,7 @@ func ModifyTeacherInDB(ctx context.Context, pbTeachers []*pb.Teacher) ([]*pb.Tea
 			return nil, utils.ErrorHandler(err, "Failed to update teacher in the database")
 		}
 
-		updatedTeacher := MapModelTeacherToPb(modelTeacher)
+		updatedTeacher := MapModelTeacherToPb(*modelTeacher)
 		updatedTeachers = append(updatedTeachers, updatedTeacher)
 	}
 	return updatedTeachers, nil
