@@ -8,6 +8,7 @@ tasks:
   update:
     desc: Update the project dependencies
     cmds:
+      - echo "Updating dependencies..."
       - go get -u ./...
       - go mod tidy
       - echo "Dependencies updated"
@@ -25,12 +26,19 @@ tasks:
       - echo "Server started successfully"  
     silent: false
 
+  ##############################################
+  # Clean up proto gen files
+  ##############################################
   clean:
-    desc: Clean up the project
+    desc: Clean up the proto generation files
     cmds:
       - rm -rf ./proto/gen
+      - echo "Proto generation files cleaned up" 
     silent: true
 
+  ##############################################
+  # Generate proto files
+  ##############################################
   proto:
     desc: Generate Go code from Protobuf files
     cmds:
@@ -38,6 +46,9 @@ tasks:
       - echo "Protobuf files generated"
     silent: true
 
+  ##############################################
+  # Compose up
+  ##############################################
   compose:
     desc: Run a Docker Compose command
     cmds:
@@ -45,6 +56,9 @@ tasks:
       - echo "Docker Compose started"
     silent: true
 
+  ##############################################
+  # Open Mongosh command in docker
+  ##############################################
   mongosh:
     desc: Run a MongoDB shell command in docker
     cmds:
@@ -55,7 +69,7 @@ tasks:
   # Load Sample Data
   ##############################################
   loaddata:
-    desc: Réinitialise la base de données MongoDB et importe les données JSON
+    desc: Reset and load sample data into MongoDB
     cmds:
       - |
         echo "Suppression de la base de données school..."
@@ -80,20 +94,20 @@ tasks:
         docker exec -it mongodb rm -rf /tmp/json
         
         echo "Import terminé avec succès!"
-    silent: false
+    silent: true
 
-  coucou:
-    desc: Stocke les valeurs passées en ligne de commande (nom et prénom)
-    cmds:
-      - |
-        # Récupérer les arguments
-        ARGS="{{.CLI_ARGS}}"
-        # Extraire le premier mot comme nom
-        NOM=$(echo $ARGS | cut -d' ' -f1)
-        # Extraire le deuxième mot comme prénom
-        PRENOM=$(echo $ARGS | cut -d' ' -f2)
-        # Afficher les résultats
-        echo "Bonjour $PRENOM $NOM !"
-        echo "Nom: $NOM"
-        echo "Prénom: $PRENOM"
-    silent: false
+  # coucou:
+  #   desc: Stocke les valeurs passées en ligne de commande (nom et prénom)
+  #   cmds:
+  #     - |
+  #       # Récupérer les arguments
+  #       ARGS="{{.CLI_ARGS}}"
+  #       # Extraire le premier mot comme nom
+  #       NOM=$(echo $ARGS | cut -d' ' -f1)
+  #       # Extraire le deuxième mot comme prénom
+  #       PRENOM=$(echo $ARGS | cut -d' ' -f2)
+  #       # Afficher les résultats
+  #       echo "Bonjour $PRENOM $NOM !"
+  #       echo "Nom: $NOM"
+  #       echo "Prénom: $PRENOM"
+  #   silent: false
