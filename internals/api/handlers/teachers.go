@@ -5,10 +5,7 @@ import (
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
 	"github.com/davidyannick86/grpc-api-mongodb/internals/repositories/mongodb"
-	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -66,36 +63,9 @@ func (s *Server) DeleteTeachers(ctx context.Context, req *pb.TeacherIds) (*pb.De
 		teacherIdsToDelete = append(teacherIdsToDelete, v.Id)
 	}
 
-	client, err := mongodb.CreateMongoClient()
+	deletedIds, err := mongodb.DeleteTeachersFromDB(ctx, teacherIdsToDelete)
 	if err != nil {
-		return nil, utils.ErrorHandler(err, "internal error")
-	}
-	defer client.Disconnect(ctx)
-
-	objectIds := make([]primitive.ObjectID, len(teacherIdsToDelete))
-
-	for i, id := range teacherIdsToDelete {
-		objectId, err := primitive.ObjectIDFromHex(id)
-		if err != nil {
-			return nil, utils.ErrorHandler(err, "invalid id")
-		}
-		objectIds[i] = objectId
-	}
-
-	filter := bson.M{"_id": bson.M{"$in": objectIds}}
-
-	result, err := client.Database("school").Collection("teachers").DeleteMany(ctx, filter)
-	if err != nil {
-		return nil, utils.ErrorHandler(err, "internal error")
-	}
-
-	if result.DeletedCount == 0 {
-		return nil, utils.ErrorHandler(err, "no teachers found")
-	}
-
-	deletedIds := make([]string, result.DeletedCount)
-	for i, id := range objectIds {
-		deletedIds[i] = id.Hex()
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.DeleteTeachersConfirmation{Status: "success", DeletedIds: deletedIds}, nil
