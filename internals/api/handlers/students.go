@@ -36,8 +36,20 @@ func (s *Server) GetStudents(ctx context.Context, req *pb.GetStudentsRequest) (*
 	// sorting
 	sortOptions := buildSortOptions(req.GetSortBy())
 
+	// pagination
+	pageNumber := req.GetPageNumber()
+	pageSize := req.GetPageSize()
+
+	if pageNumber < 1 {
+		pageNumber = 1
+	}
+
+	if pageSize < 1 {
+		pageSize = 10
+	}
+
 	// access data
-	students, err := mongodb.GetStudentsFromDB(ctx, sortOptions, filter)
+	students, err := mongodb.GetStudentsFromDB(ctx, sortOptions, filter, pageNumber, pageSize)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

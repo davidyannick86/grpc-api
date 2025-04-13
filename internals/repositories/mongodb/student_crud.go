@@ -8,7 +8,6 @@ import (
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -46,7 +45,8 @@ func AddStudentToDb(ctx context.Context, studentsFomRequest []*pb.Student) ([]*p
 	return addedStudents, nil
 }
 
-func GetStudentsFromDB(ctx context.Context, sortOptions bson.D, filter bson.M) ([]*pb.Student, error) {
+func GetStudentsFromDB(ctx context.Context, sortOptions bson.D, filter bson.M, pageNumber, pageSize uint32) ([]*pb.Student, error) {
+
 	client, err := CreateMongoClient()
 	defer client.Disconnect(ctx)
 	if err != nil {
@@ -55,14 +55,14 @@ func GetStudentsFromDB(ctx context.Context, sortOptions bson.D, filter bson.M) (
 
 	coll := client.Database("school").Collection("students")
 
-	var cursor *mongo.Cursor
+	findOptions := options.Find()
+	findOptions.SetSkip((int64(pageNumber) - 1) * int64(pageSize))
+	findOptions.SetLimit(int64(pageSize))
 
-	if len(sortOptions) < 1 {
-		cursor, err = coll.Find(ctx, filter)
-	} else {
-		cursor, err = coll.Find(ctx, filter, options.Find().SetSort(sortOptions))
+	if len(sortOptions) > 0 {
+		findOptions.SetSort(sortOptions)
 	}
-
+	cursor, err := coll.Find(ctx, filter, findOptions)
 	defer cursor.Close(ctx)
 
 	if err != nil {
