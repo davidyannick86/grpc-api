@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/api/handlers"
-	"github.com/davidyannick86/grpc-api-mongodb/internals/repositories/mongodb"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -15,12 +14,7 @@ import (
 
 func main() {
 
-	_, err := mongodb.CreateMongoClient()
-	if err != nil {
-		log.Fatalf("Failed to create MongoDB client:: %v", err)
-	}
-
-	err = godotenv.Load()
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}

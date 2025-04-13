@@ -1,5 +1,7 @@
 [Database]
 database_name = "school"
+database_user = "root"
+database_password = "password"
 teacher_collection = "teachers"
 student_collection = "students"
 execs_collection = "execs"
@@ -7,3 +9,7 @@ execs_collection = "execs"
 [Server]
 host = "localhost"
 port = 50051
+
+[JWT]
+jwt_secret = "your_jwt_secret"
+jwt_expiration = 3600
