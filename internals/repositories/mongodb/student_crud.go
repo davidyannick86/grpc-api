@@ -69,9 +69,60 @@ func GetStudentsFromDB(ctx context.Context, sortOptions bson.D, filter bson.M, p
 		return nil, utils.ErrorHandler(err, "Internal error")
 	}
 
-	students, err := decodeEntities(ctx, cursor, func() *pb.Student { return &pb.Student{} }, newModel)
+	students, err := decodeEntities(ctx, cursor, func() *pb.Student { return &pb.Student{} }, func() *models.Student {
+		return &models.Student{}
+	})
 	if err != nil {
 		return nil, err
 	}
 	return students, nil
+}
+
+func ModifyStudentInDB(ctx context.Context, pbStudents []*pb.Student) ([]*pb.Student, error) {
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Failed to create MongoDB client")
+	}
+	defer client.Disconnect(ctx)
+
+	var updatedStudents []*pb.Student
+
+	for _, student := range pbStudents {
+
+		if student.Id == "" {
+			return nil, utils.ErrorHandler(err, "Id must be set")
+		}
+
+		modelStudent := mapPbStudentToModelStudent(student)
+		objectID, err := primitive.ObjectIDFromHex(student.Id)
+
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert ID to ObjectID")
+		}
+
+		// convert modelStudent to bson document
+		modelDoc, err := bson.Marshal(modelStudent)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert model to BSON")
+		}
+
+		// convert bson document to map
+		var updatedDoc bson.M
+		err = bson.Unmarshal(modelDoc, &updatedDoc)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert BSON to map")
+		}
+
+		// remove the ID field from the updatedDoc
+		delete(updatedDoc, "_id")
+
+		_, err = client.Database("school").Collection("students").UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updatedDoc})
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to update student in the database")
+		}
+
+		updatedStudent := mapModelStudentToPb(*modelStudent)
+		updatedStudents = append(updatedStudents, updatedStudent)
+	}
+	return updatedStudents, nil
 }

@@ -78,9 +78,60 @@ func GetExecsFromDB(ctx context.Context, sortOptions bson.D, filter bson.M) ([]*
 		return nil, utils.ErrorHandler(err, "Internal error")
 	}
 
-	execs, err := decodeEntities(ctx, cursor, func() *pb.Exec { return &pb.Exec{} }, newModel)
+	execs, err := decodeEntities(ctx, cursor, func() *pb.Exec { return &pb.Exec{} }, func() *models.Exec {
+		return &models.Exec{}
+	})
 	if err != nil {
 		return nil, err
 	}
 	return execs, nil
+}
+
+func ModifyExecsInDB(ctx context.Context, pbExecs []*pb.Exec) ([]*pb.Exec, error) {
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Failed to create MongoDB client")
+	}
+	defer client.Disconnect(ctx)
+
+	var updatedExecs []*pb.Exec
+
+	for _, exec := range pbExecs {
+
+		if exec.Id == "" {
+			return nil, utils.ErrorHandler(err, "Id must be set")
+		}
+
+		modelExec := mapPbExecToModelExec(exec)
+		objectID, err := primitive.ObjectIDFromHex(exec.Id)
+
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert ID to ObjectID")
+		}
+
+		// convert modelExec to bson document
+		modelDoc, err := bson.Marshal(modelExec)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert model to BSON")
+		}
+
+		// convert bson document to map
+		var updatedDoc bson.M
+		err = bson.Unmarshal(modelDoc, &updatedDoc)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to convert BSON to map")
+		}
+
+		// remove the ID field from the updatedDoc
+		delete(updatedDoc, "_id")
+
+		_, err = client.Database("school").Collection("execs").UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": updatedDoc})
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to update exec in the database")
+		}
+
+		updatedExec := mapModelExecToPb(*modelExec)
+		updatedExecs = append(updatedExecs, updatedExec)
+	}
+	return updatedExecs, nil
 }

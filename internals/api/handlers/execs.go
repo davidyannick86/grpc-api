@@ -44,3 +44,12 @@ func (s *Server) GetExecs(ctx context.Context, req *pb.GetExecsRequest) (*pb.Exe
 
 	return &pb.Execs{Execs: execs}, nil
 }
+
+func (s *Server) UpdateExecs(ctx context.Context, req *pb.Execs) (*pb.Execs, error) {
+	updatedExecs, err := mongodb.ModifyExecsInDB(ctx, req.Execs)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.Execs{Execs: updatedExecs}, nil
+}

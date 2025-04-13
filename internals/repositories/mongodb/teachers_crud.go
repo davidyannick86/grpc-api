@@ -37,15 +37,13 @@ func GetTeachersFromDB(ctx context.Context, sortOptions bson.D, filter bson.M) (
 		return nil, utils.ErrorHandler(err, "Internal error")
 	}
 
-	teachers, err := decodeEntities(ctx, cursor, func() *pb.Teacher { return &pb.Teacher{} }, newModel)
+	teachers, err := decodeEntities(ctx, cursor, func() *pb.Teacher { return &pb.Teacher{} }, func() *models.Teacher {
+		return &models.Teacher{}
+	})
 	if err != nil {
 		return nil, err
 	}
 	return teachers, nil
-}
-
-func newModel() *models.Teacher {
-	return &models.Teacher{}
 }
 
 func AddTeacherToDb(ctx context.Context, teachersFomRequest []*pb.Teacher) ([]*pb.Teacher, error) {
