@@ -1,0 +1,9 @@
+[Database]
+database_name = "school"
+teacher_collection = "teachers"
+student_collection = "students"
+execs_collection = "execs"
+
+[Server]
+host = "localhost"
+port = 50051
