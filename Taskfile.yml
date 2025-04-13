@@ -50,7 +50,10 @@ tasks:
     cmds:
       - docker exec -it mongodb  mongosh
     silent: false
-    
+
+  ##############################################
+  # Load Sample Data
+  ##############################################
   loaddata:
     desc: Réinitialise la base de données MongoDB et importe les données JSON
     cmds:
