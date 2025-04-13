@@ -73,28 +73,28 @@ tasks:
     desc: Reset and load sample data into MongoDB
     cmds:
       - |
-        echo "Suppression de la base de données school..."
+        echo "Deleting the school database..."
         docker exec -it mongodb mongosh --eval "use school; db.dropDatabase();"
         
-        echo "Création du répertoire temporaire dans le conteneur..."
+        echo "Creating the temporary directory in the container..."
         docker exec -it mongodb mkdir -p /tmp/json
         
-        echo "Copie des fichiers JSON dans le conteneur..."
+        echo "Copying JSON files into the container..."
         docker cp ./json/execsdata.json mongodb:/tmp/json/
         docker cp ./json/studentsdata.json mongodb:/tmp/json/
         docker cp ./json/teachersdata.json mongodb:/tmp/json/
         
-        echo "Importation des données execs..."
+        echo "Importing execs data..."
         docker exec -it mongodb mongoimport --db school --collection execs --file /tmp/json/execsdata.json --jsonArray
-        echo "Importation des données students..."
+        echo "Importing students data..."
         docker exec -it mongodb mongoimport --db school --collection students --file /tmp/json/studentsdata.json --jsonArray
-        echo "Importation des données teachers..."
+        echo "Importing teachers data..."
         docker exec -it mongodb mongoimport --db school --collection teachers --file /tmp/json/teachersdata.json --jsonArray
         
-        echo "Nettoyage des fichiers temporaires..."
+        echo "Cleaning up temporary files..."
         docker exec -it mongodb rm -rf /tmp/json
         
-        echo "Import terminé avec succès!"
+        echo "Import completed successfully!"
     silent: true
 
   # coucou:
