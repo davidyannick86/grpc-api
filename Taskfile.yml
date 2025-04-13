@@ -22,9 +22,10 @@ tasks:
     deps:
       - proto
     cmds:
+      - echo "Starting the server..."
       - go run ./cmd/grpcapi/server.go
       - echo "Server started successfully"  
-    silent: false
+    silent: true
 
   ##############################################
   # Clean up proto gen files
