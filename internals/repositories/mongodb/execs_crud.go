@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"time"
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
@@ -20,6 +21,14 @@ func AddExecToDb(ctx context.Context, execsFomRequest []*pb.Exec) ([]*pb.Exec, e
 
 	for i, pbExec := range execsFomRequest {
 		newExecs[i] = mapPbExecToModelExec(pbExec)
+		hashedPassword, err := utils.HashPassword(newExecs[i].Password)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Failed to hash password")
+		}
+		newExecs[i].Password = hashedPassword
+		currentTime := time.Now().Format(time.RFC3339)
+		newExecs[i].UserCreatedAt = currentTime
+		newExecs[i].InactiveStatus = false
 	}
 
 	var addedExecs []*pb.Exec

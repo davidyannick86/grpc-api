@@ -12,12 +12,9 @@ func TestPassword(t *testing.T) {
 
 	// Hash the password
 	hashPassword, err := utils.HashPassword(password)
-
 	assert.NoError(t, err)
 
 	// Verify the password
 	err = utils.VerifyPassword(password, hashPassword)
-
 	assert.NoError(t, err)
-
 }
