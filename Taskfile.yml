@@ -82,7 +82,7 @@ tasks:
         echo "Checking if MongoDB container is running..."
         if ! docker container inspect mongodb > /dev/null 2>&1; then
           echo "MongoDB container doesn't exist. Starting with docker-compose..."
-          sleep 10
+          sleep 15
           echo "Starting MongoDB container..."
           task compose
           echo "Waiting for MongoDB to start..."
@@ -90,7 +90,7 @@ tasks:
           echo "MongoDB container exists but is not running. Starting it..."
           docker start mongodb
           echo "Waiting for MongoDB to start..."
-          sleep 10
+          sleep 15
           echo "MongoDB started successfully."
         fi
         
