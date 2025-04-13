@@ -51,6 +51,34 @@ tasks:
       - docker exec -it mongodb  mongosh
     silent: false
     
+  loaddata:
+    desc: Réinitialise la base de données MongoDB et importe les données JSON
+    cmds:
+      - |
+        echo "Suppression de la base de données school..."
+        docker exec -it mongodb mongosh --eval "use school; db.dropDatabase();"
+        
+        echo "Création du répertoire temporaire dans le conteneur..."
+        docker exec -it mongodb mkdir -p /tmp/json
+        
+        echo "Copie des fichiers JSON dans le conteneur..."
+        docker cp ./json/execsdata.json mongodb:/tmp/json/
+        docker cp ./json/studentsdata.json mongodb:/tmp/json/
+        docker cp ./json/teachersdata.json mongodb:/tmp/json/
+        
+        echo "Importation des données execs..."
+        docker exec -it mongodb mongoimport --db school --collection execs --file /tmp/json/execsdata.json --jsonArray
+        echo "Importation des données students..."
+        docker exec -it mongodb mongoimport --db school --collection students --file /tmp/json/studentsdata.json --jsonArray
+        echo "Importation des données teachers..."
+        docker exec -it mongodb mongoimport --db school --collection teachers --file /tmp/json/teachersdata.json --jsonArray
+        
+        echo "Nettoyage des fichiers temporaires..."
+        docker exec -it mongodb rm -rf /tmp/json
+        
+        echo "Import terminé avec succès!"
+    silent: false
+
   coucou:
     desc: Stocke les valeurs passées en ligne de commande (nom et prénom)
     cmds:
@@ -66,4 +94,3 @@ tasks:
         echo "Nom: $NOM"
         echo "Prénom: $PRENOM"
     silent: false
-
