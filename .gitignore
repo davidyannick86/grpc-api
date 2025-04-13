@@ -5,3 +5,4 @@ docs/
 cmd/binaries/
 cmd/grpcapi/binaries/
 .DS_Store
+.task/
