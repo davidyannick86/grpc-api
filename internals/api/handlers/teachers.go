@@ -93,12 +93,12 @@ func (s *Server) GetStudentCountByClassTeacher(ctx context.Context, req *pb.Teac
 
 	count, err := mongodb.GetStudentCountByTeacherClass(ctx, teacherID)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.StudentCount{
 		Status:       true,
-		StudentCount: int32(count.StudentCount),
+		StudentCount: int32(count),
 	}, nil
 
 }

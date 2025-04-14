@@ -205,30 +205,30 @@ func GetStudentsByTeacherIDFromDB(ctx context.Context, teacherID string) ([]*pb.
 	return students, nil
 }
 
-func GetStudentCountByTeacherClass(ctx context.Context, teacherID string) (*pb.StudentCount, error) {
+func GetStudentCountByTeacherClass(ctx context.Context, teacherID string) (int64, error) {
 	client, err := CreateMongoClient()
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return 0, utils.ErrorHandler(err, "Failed to create MongoDB client")
 	}
 	defer client.Disconnect(ctx)
 
 	ObjectId, err := primitive.ObjectIDFromHex(teacherID)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Invalid teacher ID")
+		return 0, status.Error(codes.InvalidArgument, "Invalid teacher ID")
 	}
 	// Get the teacher from the database
 	var teacher models.Teacher
 	err = client.Database("school").Collection("teachers").FindOne(ctx, bson.M{"_id": ObjectId}).Decode(&teacher)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, utils.ErrorHandler(err, "Teacher not found")
+			return 0, utils.ErrorHandler(err, "Teacher not found")
 		}
-		return nil, utils.ErrorHandler(err, "Failed to find teacher")
+		return 0, utils.ErrorHandler(err, "Failed to find teacher")
 	}
 
 	count, err := client.Database("school").Collection("students").CountDocuments(ctx, bson.M{"class": teacher.Class})
 	if err != nil {
-		return nil, utils.ErrorHandler(err, "Failed to count students")
+		return 0, utils.ErrorHandler(err, "Failed to count students")
 	}
-	return &pb.StudentCount{StudentCount: int32(count)}, nil
+	return count, nil
 }
