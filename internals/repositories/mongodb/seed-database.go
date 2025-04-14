@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"os"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 func SeedDatabase() {
 	client, err := CreateMongoClient()
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to create MongoDB client")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to create MongoDB client"))
 		return
 	}
 	defer client.Disconnect(context.Background())
@@ -22,26 +23,26 @@ func SeedDatabase() {
 	teachersJsonPath := "./json/teachersdata.json"
 	teachersData, err := os.ReadFile(teachersJsonPath)
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to read teachers JSON file")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to read teachers JSON file"))
 		return
 	}
 
 	teachers := []*models.Teacher{}
 	err = json.Unmarshal(teachersData, &teachers)
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to unmarshal teachers JSON")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to unmarshal teachers JSON"))
 		return
 	}
 	err = client.Database("school").Collection("teachers").Drop(context.Background())
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to drop teachers collection")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to drop teachers collection"))
 		return
 	}
 
 	for _, teacher := range teachers {
 		_, err = client.Database("school").Collection("teachers").InsertOne(context.Background(), teacher)
 		if err != nil {
-			utils.ErrorHandler(err, "Failed to insert teacher")
+			log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to insert teacher"))
 			continue
 		}
 	}
@@ -50,27 +51,27 @@ func SeedDatabase() {
 	studentsJsonPath := "./json/studentsdata.json"
 	studentsData, err := os.ReadFile(studentsJsonPath)
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to read students JSON file")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to read students JSON file"))
 		return
 	}
 
 	students := []*models.Student{}
 	err = json.Unmarshal(studentsData, &students)
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to unmarshal students JSON")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to unmarshal students JSON"))
 		return
 	}
 
 	err = client.Database("school").Collection("students").Drop(context.Background())
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to drop students collection")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to drop students collection"))
 		return
 	}
 
 	for _, student := range students {
 		_, err = client.Database("school").Collection("students").InsertOne(context.Background(), student)
 		if err != nil {
-			utils.ErrorHandler(err, "Failed to insert student")
+			log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to insert student"))
 			continue
 		}
 	}
@@ -78,25 +79,25 @@ func SeedDatabase() {
 	execsJsonPath := "./json/execsdata.json"
 	execsData, err := os.ReadFile(execsJsonPath)
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to read execs JSON file")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to read execs JSON file"))
 		return
 	}
 
 	execs := []*models.Exec{}
 	err = json.Unmarshal(execsData, &execs)
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to unmarshal execs JSON")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to unmarshal execs JSON"))
 		return
 	}
 	err = client.Database("school").Collection("execs").Drop(context.Background())
 	if err != nil {
-		utils.ErrorHandler(err, "Failed to drop execs collection")
+		log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to drop execs collection"))
 		return
 	}
 	for i, exec := range execs {
 		hashedPassword, err := utils.HashPassword(exec.Password) // Updated to use exec instead of execs[i]
 		if err != nil {
-			utils.ErrorHandler(err, "Failed to hash password")
+			log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to hash password"))
 			continue
 		}
 		execs[i].Password = hashedPassword
@@ -105,7 +106,7 @@ func SeedDatabase() {
 		execs[i].InactiveStatus = false
 		_, err = client.Database("school").Collection("execs").InsertOne(context.Background(), execs[i])
 		if err != nil {
-			utils.ErrorHandler(err, "Failed to insert exec")
+			log.Printf("Error: %v", utils.ErrorHandler(err, "Failed to insert exec"))
 			continue
 		}
 	}
