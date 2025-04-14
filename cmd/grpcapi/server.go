@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/api/handlers"
+	"github.com/davidyannick86/grpc-api-mongodb/internals/api/interceptors"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -19,7 +20,7 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	server := grpc.NewServer()
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(interceptors.ResponseTimeInterceptor))
 
 	pb.RegisterExecsServiceServer(server, &handlers.Server{})
 	pb.RegisterStudentsServiceServer(server, &handlers.Server{})
