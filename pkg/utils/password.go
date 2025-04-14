@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"golang.org/x/crypto/argon2"
@@ -33,9 +32,6 @@ func HashPassword(password string) (string, error) {
 
 func VerifyPassword(password, encodedHash string) error {
 	parts := strings.Split(encodedHash, ".")
-
-	// Removed logging of raw password to enhance security
-	// Removed logging of encoded hash to avoid exposing sensitive data
 
 	if len(parts) != 2 {
 		return ErrorHandler(errors.New("invalid hash format"), "Password verification failed")
