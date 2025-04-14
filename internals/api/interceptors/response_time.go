@@ -3,7 +3,6 @@ package interceptors
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"google.golang.org/grpc"
@@ -12,7 +11,6 @@ import (
 )
 
 func ResponseTimeInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-	log.Println("ResponseTimeInterceptor: start")
 	// Log the start time
 	start := time.Now()
 
@@ -33,7 +31,6 @@ func ResponseTimeInterceptor(ctx context.Context, req any, info *grpc.UnaryServe
 	// Set the metadata in the context
 	grpc.SendHeader(ctx, md)
 
-	log.Println("ResponseTimeInterceptor: end")
 	// Return the response and error
 	return resp, err
 }
