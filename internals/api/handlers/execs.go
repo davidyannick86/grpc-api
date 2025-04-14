@@ -7,8 +7,6 @@ import (
 	"github.com/davidyannick86/grpc-api-mongodb/internals/repositories/mongodb"
 	"github.com/davidyannick86/grpc-api-mongodb/pkg/utils"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -76,21 +74,9 @@ func (s *Server) DeleteExecs(ctx context.Context, req *pb.ExecIds) (*pb.DeleteEx
 
 func (s *Server) Login(ctx context.Context, req *pb.ExecLoginRequest) (*pb.ExecLoginResponse, error) {
 
-	client, err := mongodb.CreateMongoClient()
+	exec, err := mongodb.GetUserByUsername(ctx, req.GetUsername())
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	defer client.Disconnect(ctx)
-
-	filter := bson.M{"username": req.GetUsername()}
-	var exec models.Exec
-
-	err = client.Database("school").Collection("execs").FindOne(ctx, filter).Decode(&exec)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, utils.ErrorHandler(err, "Exec not found")
-		}
-		return nil, utils.ErrorHandler(err, "Internal error")
+		return nil, err
 	}
 
 	if exec.InactiveStatus {

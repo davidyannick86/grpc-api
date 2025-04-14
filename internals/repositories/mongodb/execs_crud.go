@@ -170,3 +170,23 @@ func DeleteExecsFromDB(ctx context.Context, execIdsToDelete []string) ([]string,
 	}
 	return deletedIds, nil
 }
+
+func GetUserByUsername(ctx context.Context, username string) (*models.Exec, error) {
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Failed to create MongoDB client")
+	}
+	defer client.Disconnect(ctx)
+
+	filter := bson.M{"username": username}
+	var exec models.Exec
+
+	err = client.Database("school").Collection("execs").FindOne(ctx, filter).Decode(&exec)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, utils.ErrorHandler(err, "Exec not found")
+		}
+		return nil, utils.ErrorHandler(err, "Internal error")
+	}
+	return &exec, nil
+}
