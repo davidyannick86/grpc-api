@@ -66,57 +66,7 @@ tasks:
       - docker exec -it mongodb  mongosh
     silent: false
 
-  ##############################################
-  # Load Sample Data
-  ##############################################
-  loaddata:
-    desc: Reset and load sample data into MongoDB
-    cmds:
-      - |
-        echo "Checking if Docker is running..."
-        if ! docker info > /dev/null 2>&1; then
-          echo "Error: Docker is not running. Please start Docker and try again."
-          exit 1
-        fi
-        
-        echo "Checking if MongoDB container is running..."
-        if ! docker container inspect mongodb > /dev/null 2>&1; then
-          echo "MongoDB container doesn't exist. Starting with docker-compose..."
-          sleep 15
-          echo "Starting MongoDB container..."
-          task compose
-          echo "Waiting for MongoDB to start..."
-        elif [ "$(docker container inspect -f '{{.State.Running}}' mongodb)" != "true" ]; then
-          echo "MongoDB container exists but is not running. Starting it..."
-          docker start mongodb
-          echo "Waiting for MongoDB to start..."
-          sleep 15
-          echo "MongoDB started successfully."
-        fi
-        
-        echo "Deleting the school database..."
-        docker exec -it mongodb mongosh --eval "use school; db.dropDatabase();"
-        
-        echo "Creating the temporary directory in the container..."
-        docker exec -it mongodb mkdir -p /tmp/json
-        
-        echo "Copying JSON files into the container..."
-        docker cp ./json/execsdata.json mongodb:/tmp/json/
-        docker cp ./json/studentsdata.json mongodb:/tmp/json/
-        docker cp ./json/teachersdata.json mongodb:/tmp/json/
-        
-        echo "Importing execs data..."
-        docker exec -it mongodb mongoimport --db school --collection execs --file /tmp/json/execsdata.json --jsonArray
-        echo "Importing students data..."
-        docker exec -it mongodb mongoimport --db school --collection students --file /tmp/json/studentsdata.json --jsonArray
-        echo "Importing teachers data..."
-        docker exec -it mongodb mongoimport --db school --collection teachers --file /tmp/json/teachersdata.json --jsonArray
-        
-        echo "Cleaning up temporary files..."
-        docker exec -it mongodb rm -rf /tmp/json
-        
-        echo "Import completed successfully!"
-    silent: true
+
 
   # coucou:
   #   desc: Stocke les valeurs passées en ligne de commande (nom et prénom)
