@@ -7,17 +7,17 @@ import (
 
 	"github.com/davidyannick86/grpc-api-mongodb/internals/api/handlers"
 	"github.com/davidyannick86/grpc-api-mongodb/internals/api/interceptors"
-	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
 )
 
 func main() {
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(interceptors.ResponseTimeInterceptor))
