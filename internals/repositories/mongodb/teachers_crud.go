@@ -161,3 +161,74 @@ func DeleteTeachersFromDB(ctx context.Context, teacherIdsToDelete []string) ([]s
 	}
 	return deletedIds, nil
 }
+
+func GetStudentsByTeacherIDFromDB(ctx context.Context, teacherID string) ([]*pb.Student, error) {
+
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer client.Disconnect(ctx)
+
+	ObjectId, err := primitive.ObjectIDFromHex(teacherID)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid teacher ID")
+	}
+	// Get the teacher from the database
+	var teacher models.Teacher
+	err = client.Database("school").Collection("teachers").FindOne(ctx, bson.M{"_id": ObjectId}).Decode(&teacher)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, utils.ErrorHandler(err, "Teacher not found")
+		}
+		return nil, utils.ErrorHandler(err, "Failed to find teacher")
+	}
+
+	cursor, err := client.Database("school").Collection("students").Find(ctx, bson.M{"class": teacher.Class})
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Failed to find students")
+	}
+	defer cursor.Close(ctx)
+
+	students, err := decodeEntities(ctx, cursor, func() *pb.Student { return &pb.Student{} }, func() *models.Student { return &models.Student{} })
+
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Failed to decode students")
+	}
+
+	err = cursor.Err()
+
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Cursor error")
+	}
+
+	return students, nil
+}
+
+func GetStudentCountByTeacherClass(ctx context.Context, teacherID string) (*pb.StudentCount, error) {
+	client, err := CreateMongoClient()
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer client.Disconnect(ctx)
+
+	ObjectId, err := primitive.ObjectIDFromHex(teacherID)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid teacher ID")
+	}
+	// Get the teacher from the database
+	var teacher models.Teacher
+	err = client.Database("school").Collection("teachers").FindOne(ctx, bson.M{"_id": ObjectId}).Decode(&teacher)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, utils.ErrorHandler(err, "Teacher not found")
+		}
+		return nil, utils.ErrorHandler(err, "Failed to find teacher")
+	}
+
+	count, err := client.Database("school").Collection("students").CountDocuments(ctx, bson.M{"class": teacher.Class})
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Failed to count students")
+	}
+	return &pb.StudentCount{StudentCount: int32(count)}, nil
+}

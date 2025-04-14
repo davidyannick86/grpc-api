@@ -6,6 +6,7 @@ import (
 	"github.com/davidyannick86/grpc-api-mongodb/internals/models"
 	"github.com/davidyannick86/grpc-api-mongodb/internals/repositories/mongodb"
 	pb "github.com/davidyannick86/grpc-api-mongodb/proto/gen"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -69,4 +70,35 @@ func (s *Server) DeleteTeachers(ctx context.Context, req *pb.TeacherIds) (*pb.De
 	}
 
 	return &pb.DeleteTeachersConfirmation{Status: "success", DeletedIds: deletedIds}, nil
+}
+
+func (s *Server) GetStudentsByClassTeacher(ctx context.Context, req *pb.TeacherId) (*pb.Students, error) {
+
+	teacherID := req.GetId()
+
+	students, err := mongodb.GetStudentsByTeacherIDFromDB(ctx, teacherID)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Error(codes.NotFound, "No students found for this teacher")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.Students{Students: students}, nil
+
+}
+
+func (s *Server) GetStudentCountByClassTeacher(ctx context.Context, req *pb.TeacherId) (*pb.StudentCount, error) {
+	teacherID := req.GetId()
+
+	count, err := mongodb.GetStudentCountByTeacherClass(ctx, teacherID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.StudentCount{
+		Status:       true,
+		StudentCount: int32(count.StudentCount),
+	}, nil
+
 }
